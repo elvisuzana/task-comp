@@ -45,7 +45,7 @@ pub const KEY_NES_GAME_GENIE_CODE: Key = [0x01, 0x04];
 pub const KEY_SNES_CLOCK_FILTER: Key =  [0x02, 0x02];
 pub const KEY_SNES_OVERREAD: Key =      [0x02, 0x03];
 pub const KEY_SNES_GAME_GENIE_CODE: Key = [0x02, 0x04];
-//pub const KEY_SNES_LATCH_TRAIN: Key = [0x02, 0x05]; // reserved
+pub const KEY_SNES_LATCH_TRAIN: Key = [0x02, 0x05];
 
 pub const KEY_GENESIS_GAME_GENIE_CODE: Key = [0x08, 0x04];
 
@@ -56,6 +56,7 @@ pub const KEY_LAG_FRAME_CHUNK: Key =    [0xFE, 0x04];
 pub const KEY_MOVIE_TRANSITION: Key =   [0xFE, 0x05];
 
 pub const KEY_COMMENT: Key =            [0xFF, 0x01];
+pub const KEY_EXPERIMENTAL: Key =        [0xFF, 0xFE];
 pub const KEY_UNSPECIFIED: Key =        [0xFF, 0xFF];
 
 pub fn get_keys() -> Vec<(Key, &'static str, &'static str)> {
@@ -89,6 +90,7 @@ pub fn get_keys() -> Vec<(Key, &'static str, &'static str)> {
         (KEY_SNES_CLOCK_FILTER,         "SNES_CLOCK_FILTER",        "A clock filter time in tenths of a microsecond (0.1us) for how long until new clock pulses should be accepted"),
         (KEY_SNES_OVERREAD,             "SNES_OVERREAD",            "Specifies whether a high (true) or low (false) signal is sent when the console requests more input buttons than expected"),
         (KEY_SNES_GAME_GENIE_CODE,      "SNES_GAME_GENIE_CODE",     "Game Genie code used for replay of this TAS"),
+        (KEY_SNES_LATCH_TRAIN,          "SNES_LATCH_TRAIN",         "Sequential list of expected latch train lengths"),
         (KEY_GENESIS_GAME_GENIE_CODE,   "GENESIS_GAME_GENIE_CODE",  "Game Genie code used for replay of this TAS"),
         (KEY_INPUT_CHUNK,               "INPUT_CHUNK",              "A chunk of input data for a specific controller port. Controller data is structured based on the inputmaps.txt spec file"),
         (KEY_INPUT_MOMENT,              "INPUT_MOMENT",             "Input data for a specific controller port with specific timing. Controller data is structured based on the inputmaps.txt spec file"),
@@ -96,6 +98,7 @@ pub fn get_keys() -> Vec<(Key, &'static str, &'static str)> {
         (KEY_LAG_FRAME_CHUNK,           "LAG_FRAME_CHUNK",          "Specifies a chunk of lag frames pulled from the original TAS movie (should be used in conjunction with INPUT_CHUNK)"),
         (KEY_MOVIE_TRANSITION,          "MOVIE_TRANSITION",         "Specifies a transition at a specific point in the original TAS movie (will likely require LAG_FRAME_CHUNK's)"),
         (KEY_COMMENT,                   "COMMENT",                  "A string of text, often used for commentary (extra useful when combined with TRANSITION's)"),
+        (KEY_EXPERIMENTAL,              "EXPERIMENTAL",             "Whether or not this file is using experimental features/packets"),
         (KEY_UNSPECIFIED,               "UNSPECIFIED",              "Unspecified, arbitrary data"),
     ]
 }
@@ -261,6 +264,7 @@ fn parse_packet(data_chunk: &[u8]) -> Box<dyn Packet> {
         KEY_SNES_CLOCK_FILTER => SnesClockFilter::parse(key, payload),
         KEY_SNES_OVERREAD => SnesOverread::parse(key, payload),
         KEY_SNES_GAME_GENIE_CODE => SnesGameGenieCode::parse(key, payload),
+        KEY_SNES_LATCH_TRAIN => SnesLatchTrain::parse(key, payload),
         KEY_GENESIS_GAME_GENIE_CODE => GenesisGameGenieCode::parse(key, payload),
         KEY_INPUT_CHUNK => InputChunk::parse(key, payload),
         KEY_INPUT_MOMENT => InputMoment::parse(key, payload),
@@ -268,6 +272,7 @@ fn parse_packet(data_chunk: &[u8]) -> Box<dyn Packet> {
         KEY_LAG_FRAME_CHUNK => LagFrameChunk::parse(key, payload),
         KEY_MOVIE_TRANSITION => MovieTransition::parse(key, payload),
         KEY_COMMENT => Comment::parse(key, payload),
+        KEY_EXPERIMENTAL => Experimental::parse(key, payload),
         KEY_UNSPECIFIED => Unspecified::parse(key, payload),
         _ => Unsupported::parse(key, payload)
     }
@@ -1258,6 +1263,36 @@ impl Packet for SnesGameGenieCode {
 }
 
 
+////////////////////////////////////// SNES_LATCH_TRAIN //////////////////////////////////////
+#[derive(Clone, Debug)]
+pub struct SnesLatchTrain {
+    pub key: Key,
+    pub trains: Vec<u64>,
+}
+impl SnesLatchTrain {
+    pub fn new(trains: Vec<u64>) -> Self { Self {
+        key: KEY_SNES_LATCH_TRAIN,
+        trains,
+    }}
+}
+impl Display for SnesLatchTrain {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {:?}", "SNES_LATCH_TRAIN".dark_yellow(), self.trains)
+    }
+}
+impl Packet for SnesLatchTrain {
+    fn parse(key: Key, payload: &[u8]) -> Box<dyn Packet> { Box::new(Self {
+        key,
+        trains: payload.chunks_exact(8).map(|chunk| u64::from_be_bytes(chunk.try_into().unwrap())).collect(),
+    })}
+    fn raw(&self) -> Vec<u8> {
+        payload_to_raw(self.key, self.trains.iter().map(|train| (*train).to_be_bytes()).flatten().collect::<Vec<u8>>().as_slice())
+    }
+    fn key(&self) -> Key { self.key }
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+
 ////////////////////////////////////// GENESIS_GAME_GENIE_CODE //////////////////////////////////////
 #[derive(Clone, Debug)]
 pub struct GenesisGameGenieCode {
@@ -1519,6 +1554,36 @@ impl Packet for Comment {
     })}
     fn raw(&self) -> Vec<u8> {
         payload_to_raw(self.key, self.comment.as_bytes())
+    }
+    fn key(&self) -> Key { self.key }
+    fn as_any(&self) -> &dyn Any { self }
+}
+
+
+////////////////////////////////////// EXPERIMENTAL //////////////////////////////////////
+#[derive(Clone, Debug)]
+pub struct Experimental {
+    pub key: Key,
+    pub experimental: bool,
+}
+impl Experimental {
+    pub fn new(experimental: bool) -> Self { Self {
+        key: KEY_EXPERIMENTAL,
+        experimental,
+    }}
+}
+impl Display for Experimental {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}", "EXPERIMENTAL".dark_yellow(), self.experimental)
+    }
+}
+impl Packet for Experimental {
+    fn parse(key: Key, payload: &[u8]) -> Box<dyn Packet> { Box::new(Self {
+        key,
+        experimental: payload[0] != 0,
+    })}
+    fn raw(&self) -> Vec<u8> {
+        payload_to_raw(self.key, &[self.experimental as u8])
     }
     fn key(&self) -> Key { self.key }
     fn as_any(&self) -> &dyn Any { self }

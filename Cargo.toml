@@ -1,15 +1,13 @@
 [package]
 name = "tasd"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 authors = ["Luke Stadem <bigbass1997.website@gmail.com>"]
 description = "Encoder/decoder for the TASD file format."
-license = "BSD-2-Clause"
+license = "MIT"
 repository = "https://github.com/bigbass1997/tasd"
 keywords = ["dump", "tas", "tasd", "encoding", "decoding"]
 categories = ["encoding", "parser-implementations", "data-structures"]
 
 [dependencies]
-chrono = "0.4"
-crossterm = "0.25"
-dyn-clone = "1"
+strum_macros = "0.25"

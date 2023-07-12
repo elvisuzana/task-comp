@@ -394,6 +394,7 @@ impl_from_packet!(
 );
 
 #[derive(Debug, Copy, Clone, PartialEq, strum_macros::Display)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum PacketKind {
     ConsoleType,
     ConsoleRegion,

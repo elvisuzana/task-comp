@@ -3,6 +3,16 @@ use std::fmt::Debug;
 use crate::spec::reader::Reader;
 use crate::spec::writer::Writer;
 
+macro_rules! impl_from_packet {
+    ($($name:ident)*) => ($(
+        impl From<$name> for Packet {
+            fn from(value: $name) -> Self {
+                Self::$name(value)
+            }
+        }
+    )*)
+}
+
 pub const KEY_CONSOLE_TYPE: &[u8] =         &[0x00, 0x01];
 pub const KEY_CONSOLE_REGION: &[u8] =       &[0x00, 0x02];
 pub const KEY_GAME_TITLE: &[u8] =           &[0x00, 0x03];
@@ -340,6 +350,48 @@ impl Encode for Packet {
         }
     }
 }
+impl_from_packet!(
+    ConsoleType
+    ConsoleRegion
+    GameTitle
+    RomName
+    Attribution
+    Category
+    EmulatorName
+    EmulatorVersion
+    EmulatorCore
+    TasLastModified
+    DumpCreated
+    DumpLastModified
+    TotalFrames
+    Rerecords
+    SourceLink
+    BlankFrames
+    Verified
+    MemoryInit
+    GameIdentifier
+    MovieLicense
+    MovieFile
+    PortController
+    NesLatchFilter
+    NesClockFilter
+    NesOverread
+    NesGameGenieCode
+    SnesClockFilter
+    SnesOverread
+    SnesGameGenieCode
+    SnesLatchTrain
+    GenesisGameGenieCode
+    InputChunk
+    InputMoment
+    Transition
+    LagFrameChunk
+    MovieTransition
+    Comment
+    Experimental
+    Unspecified
+    Unsupported
+);
 
 #[derive(Debug, Copy, Clone, PartialEq, strum_macros::Display)]
 pub enum PacketKind {

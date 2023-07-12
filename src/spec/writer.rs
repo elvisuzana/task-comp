@@ -89,4 +89,9 @@ impl Writer {
         
         data
     }
+    
+    /// Returns a clone of this [Writer]'s internal buffer.
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.inner.clone()
+    }
 }

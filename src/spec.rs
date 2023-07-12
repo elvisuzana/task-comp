@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::spec::packets::{Packet, PacketError};
+use crate::spec::packets::{DumpCreated, Encode, Packet, PacketError};
 use crate::spec::reader::Reader;
+use crate::spec::writer::Writer;
 
 pub mod packets;
 pub mod reader;
@@ -16,6 +17,7 @@ pub enum TasdError {
     Packet(PacketError),
     MissingHeader,
     MagicNumberMismatch(Vec<u8>),
+    MissingPath,
 }
 impl From<std::io::Error> for TasdError {
     fn from(value: std::io::Error) -> Self {
@@ -94,5 +96,31 @@ impl TasdFile {
         }
         
         Ok(file)
+    }
+    
+    /// Encodes data in this [TasdFile] into a TASD formatted Vec of bytes.
+    pub fn encode(&self) -> Vec<u8> {
+        let mut w = Writer::new();
+        
+        w.write_slice(&MAGIC_NUMBER);
+        w.write_slice(&LATEST_VERSION);
+        w.write_u8(self.keylen);
+        
+        for packet in &self.packets {
+            w.write_slice(&packet.encode(self.keylen));
+        }
+        
+        w.to_vec()
+    }
+    
+    /// Attempts to save this file to the path specified in [`self.path`][field@TasdFile::path].
+    /// 
+    /// If the path is `None`, or any IO errors are encountered, an `Err` is returned, otherwise `Ok(())`.
+    pub fn save(&self) -> Result<(), TasdError> {
+        if let Some(path) = self.path.as_ref() {
+            std::fs::write(path, self.encode()).map_err(|err| err.into())
+        } else {
+            Err(TasdError::MissingPath)
+        }
     }
 }

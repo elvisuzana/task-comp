@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 use crate::spec::packets::{Packet, PacketError};
 use crate::spec::reader::Reader;
 
@@ -45,7 +46,14 @@ impl Default for TasdFile {
 }
 impl TasdFile {
     pub fn new() -> Self {
-        Self::default()
+        let mut tasd = Self::default();
+        tasd.packets.push(
+            DumpCreated {
+                epoch: SystemTime::now().duration_since(UNIX_EPOCH).expect("Time has gone backwards?").as_secs() as i64
+            }.into()
+        );
+        
+        tasd
     }
     
     pub fn parse_file<P: Into<PathBuf>>(path: P) -> Result<Self, TasdError> {

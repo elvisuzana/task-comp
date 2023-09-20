@@ -28,19 +28,19 @@ impl<'a> Reader<'a> {
         u64::from_be_bytes(self.inner[self.pos..(self.pos + 8)].try_into().unwrap())
     }
     
-    pub fn peek_i8(&mut self) -> i8 {
+    pub fn peek_i8(&self) -> i8 {
         self.peek_u8() as i8
     }
     
-    pub fn peek_i16(&mut self) -> i16 {
+    pub fn peek_i16(&self) -> i16 {
         self.peek_u16() as i16
     }
     
-    pub fn peek_i32(&mut self) -> i32 {
+    pub fn peek_i32(&self) -> i32 {
         self.peek_u32() as i32
     }
     
-    pub fn peek_i64(&mut self) -> i64 {
+    pub fn peek_i64(&self) -> i64 {
         self.peek_u64() as i64
     }
     

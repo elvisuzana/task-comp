@@ -95,3 +95,105 @@ impl Writer {
         self.inner.clone()
     }
 }
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use std::array::from_fn;
+    use crate::spec::writer::Writer;
+    
+    #[test]
+    fn writes() {
+        fn perform<T: Copy, I: IntoIterator<Item = T>, F: Fn(&mut Writer, &mut Vec<u8>, T)>(pattern: I, func: F) {
+            let mut w = Writer::new();
+            let mut data = Vec::with_capacity(256);
+            for i in pattern.into_iter() {
+                func(&mut w, &mut data, i);
+            }
+            assert_eq!(w.inner, data);
+        }
+        
+        perform(u8::MIN..=u8::MAX, |w, expected, data| {
+            w.write_u8(data);
+            expected.push(data);
+        });
+        
+        perform(-128..=127, |w, expected, data| {
+            w.write_i8(data);
+            expected.push(data as u8);
+        });
+        
+        const U16PAT: [u16; 8] = [0x0000, 0x55AA, 0xAA55, 0xFFFF, 0x1234, 0x6969, 0x0FA1, 0x1010];
+        perform(U16PAT, |w, expected, data| {
+            w.write_u16(data);
+            expected.extend_from_slice(&data.to_be_bytes());
+        });
+        
+        const I16PAT: [i16; 8] = [0x0000, 0x55AA, -0x7A55, -0x8000, 0x1234, 0x6969, 0x0FA1, 0x1010];
+        perform(I16PAT, |w, expected, data| {
+            w.write_i16(data);
+            expected.extend_from_slice(&data.to_be_bytes());
+        });
+        
+        const U32PAT: [u32; 8] = [0x00000000, 0x55AA33DD, 0xAA55DD33, 0xFFFFFFFF, 0x12345678, 0x69696969, 0x0FA17C15, 0x10101010];
+        perform(U32PAT, |w, expected, data| {
+            w.write_u32(data);
+            expected.extend_from_slice(&data.to_be_bytes());
+        });
+        
+        const I32PAT: [i32; 8] = [0x00000000, 0x55AA33DD, -0x7A55DD33, -0x80000000, 0x12345678, 0x69696969, 0x0FA17C15, 0x10101010];
+        perform(I32PAT, |w, expected, data| {
+            w.write_i32(data);
+            expected.extend_from_slice(&data.to_be_bytes());
+        });
+        
+        const U64PAT: [u64; 8] = [0x0000000000000000, 0x55AA55AA55AA55AA, 0xAA55AA55AA55AA55, 0xFFFFFFFFFFFFFFFF, 0x123456789ABCDEF, 0x6969696969696969, 0x0FA17C15A6B90D38, 0x1010101010101010];
+        perform(U64PAT, |w, expected, data| {
+            w.write_u64(data);
+            expected.extend_from_slice(&data.to_be_bytes());
+        });
+        
+        const I64PAT: [i64; 8] = [0x0000000000000000, 0x55AA55AA55AA55AA, -0x7A55AA55AA55AA55, -0x8000000000000000, 0x123456789ABCDEF, 0x6969696969696969, 0x0FA17C15A6B90D38, 0x1010101010101010];
+        perform(I64PAT, |w, expected, data| {
+            w.write_i64(data);
+            expected.extend_from_slice(&data.to_be_bytes());
+        });
+        
+        perform([false, true, false, false, true, true, false, false, false, true, true, true], |w, expected, data| {
+            w.write_bool(data);
+            expected.push(data as u8);
+        });
+        
+        perform(["foo", "bar", "fish", "tasd", "hello world!", "lorem ipsum"], |w, expected, data| {
+            w.write_str(data);
+            expected.extend_from_slice(data.as_bytes());
+        });
+        
+        let mut w = Writer::new();
+        w.write_iter(0..=255);
+        assert_eq!(w.inner, (0..=255u8).into_iter().collect::<Vec<u8>>());
+    }
+    
+    #[test]
+    fn conversion() {
+        let data = [0x11, 0x22, 0x33, 0xA5, 0x5A, 0x00, 0xFF];
+        let mut w = Writer::new();
+        
+        w.write_slice(&data);
+        assert_eq!(w.to_vec(), data);
+        
+        let mut w = Writer::new();
+        let data: [u8; 0x105A5] = from_fn(|i| i as u8);
+        w.write_iter(data.clone());
+        
+        let mut packet = vec![
+            0x5A, 0xA5,
+            0x03, 0x01, 0x05, 0xA5
+        ];
+        packet.extend_from_slice(&data);
+        assert_eq!(w.into_packet(&[0x5A, 0xA5], 2), packet);
+    }
+}

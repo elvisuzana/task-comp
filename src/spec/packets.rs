@@ -160,7 +160,7 @@ impl Packet {
         }
         
         let mut plen = [0u8; 8];
-        for i in 0..exp {
+        for i in (0..exp).rev() {
             plen[plen.len() - i - 1] = r.read_u8();
         }
         let plen = u64::from_be_bytes(plen);

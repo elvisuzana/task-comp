@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 - Added unit and integration tests (in-progress)
+- Fixed bug where payload lengths larger than 255 bytes were decoded incorrectly
 
 ## [0.2.1] - 2923-07-12
 - Change: `TasdFile::new()` now includes the DUMP_CREATED packet in the returned `TasdFile` instance

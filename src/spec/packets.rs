@@ -36,14 +36,16 @@ pub const KEY_MOVIE_LICENSE: &[u8] =        &[0x00, 0x14];
 pub const KEY_MOVIE_FILE: &[u8] =           &[0x00, 0x15];
 
 pub const KEY_PORT_CONTROLLER: &[u8] =      &[0x00, 0xF0];
+pub const KEY_PORT_OVERREAD: &[u8] =         &[0x00, 0xF1];
 
 pub const KEY_NES_LATCH_FILTER: &[u8] =     &[0x01, 0x01];
 pub const KEY_NES_CLOCK_FILTER: &[u8] =     &[0x01, 0x02];
-pub const KEY_NES_OVERREAD: &[u8] =         &[0x01, 0x03];
+
 pub const KEY_NES_GAME_GENIE_CODE: &[u8] =  &[0x01, 0x04];
 
+pub const KEY_SNES_LATCH_FILTER: &[u8] =    &[0x02, 0x01];
 pub const KEY_SNES_CLOCK_FILTER: &[u8] =    &[0x02, 0x02];
-pub const KEY_SNES_OVERREAD: &[u8] =        &[0x02, 0x03];
+
 pub const KEY_SNES_GAME_GENIE_CODE: &[u8] = &[0x02, 0x04];
 pub const KEY_SNES_LATCH_TRAIN: &[u8] =     &[0x02, 0x05];
 
@@ -121,12 +123,12 @@ pub enum Packet {
     MovieLicense(MovieLicense),
     MovieFile(MovieFile),
     PortController(PortController),
+    PortOverread(PortOverread),
     NesLatchFilter(NesLatchFilter),
     NesClockFilter(NesClockFilter),
-    NesOverread(NesOverread),
     NesGameGenieCode(NesGameGenieCode),
+    SnesLatchFilter(SnesLatchFilter),
     SnesClockFilter(SnesClockFilter),
-    SnesOverread(SnesOverread),
     SnesGameGenieCode(SnesGameGenieCode),
     SnesLatchTrain(SnesLatchTrain),
     GenesisGameGenieCode(GenesisGameGenieCode),
@@ -192,12 +194,12 @@ impl Packet {
             KEY_MOVIE_LICENSE => Packet::MovieLicense(MovieLicense::decode(key, payload)?),
             KEY_MOVIE_FILE => Packet::MovieFile(MovieFile::decode(key, payload)?),
             KEY_PORT_CONTROLLER => Packet::PortController(PortController::decode(key, payload)?),
+            KEY_PORT_OVERREAD => Packet::PortOverread(PortOverread::decode(key, payload)?),
             KEY_NES_LATCH_FILTER => Packet::NesLatchFilter(NesLatchFilter::decode(key, payload)?),
             KEY_NES_CLOCK_FILTER => Packet::NesClockFilter(NesClockFilter::decode(key, payload)?),
-            KEY_NES_OVERREAD => Packet::NesOverread(NesOverread::decode(key, payload)?),
             KEY_NES_GAME_GENIE_CODE => Packet::NesGameGenieCode(NesGameGenieCode::decode(key, payload)?),
+            KEY_SNES_LATCH_FILTER => Packet::SnesLatchFilter(SnesLatchFilter::decode(key, payload)?),
             KEY_SNES_CLOCK_FILTER => Packet::SnesClockFilter(SnesClockFilter::decode(key, payload)?),
-            KEY_SNES_OVERREAD => Packet::SnesOverread(SnesOverread::decode(key, payload)?),
             KEY_SNES_GAME_GENIE_CODE => Packet::SnesGameGenieCode(SnesGameGenieCode::decode(key, payload)?),
             KEY_SNES_LATCH_TRAIN => Packet::SnesLatchTrain(SnesLatchTrain::decode(key, payload)?),
             KEY_GENESIS_GAME_GENIE_CODE => Packet::GenesisGameGenieCode(GenesisGameGenieCode::decode(key, payload)?),
@@ -238,12 +240,12 @@ impl Packet {
             Self::MovieLicense(packet) => packet.kind(),
             Self::MovieFile(packet) => packet.kind(),
             Self::PortController(packet) => packet.kind(),
+            Self::PortOverread(packet) => packet.kind(),
             Self::NesLatchFilter(packet) => packet.kind(),
             Self::NesClockFilter(packet) => packet.kind(),
-            Self::NesOverread(packet) => packet.kind(),
             Self::NesGameGenieCode(packet) => packet.kind(),
+            Self::SnesLatchFilter(packet) => packet.kind(),
             Self::SnesClockFilter(packet) => packet.kind(),
-            Self::SnesOverread(packet) => packet.kind(),
             Self::SnesGameGenieCode(packet) => packet.kind(),
             Self::SnesLatchTrain(packet) => packet.kind(),
             Self::GenesisGameGenieCode(packet) => packet.kind(),
@@ -284,12 +286,12 @@ impl Encode for Packet {
             Self::MovieLicense(packet) => packet.encode(keylen),
             Self::MovieFile(packet) => packet.encode(keylen),
             Self::PortController(packet) => packet.encode(keylen),
+            Self::PortOverread(packet) => packet.encode(keylen),
             Self::NesLatchFilter(packet) => packet.encode(keylen),
             Self::NesClockFilter(packet) => packet.encode(keylen),
-            Self::NesOverread(packet) => packet.encode(keylen),
             Self::NesGameGenieCode(packet) => packet.encode(keylen),
+            Self::SnesLatchFilter(packet) => packet.encode(keylen),
             Self::SnesClockFilter(packet) => packet.encode(keylen),
-            Self::SnesOverread(packet) => packet.encode(keylen),
             Self::SnesGameGenieCode(packet) => packet.encode(keylen),
             Self::SnesLatchTrain(packet) => packet.encode(keylen),
             Self::GenesisGameGenieCode(packet) => packet.encode(keylen),
@@ -329,12 +331,12 @@ impl Encode for Packet {
             Self::MovieLicense(packet) => packet.key(),
             Self::MovieFile(packet) => packet.key(),
             Self::PortController(packet) => packet.key(),
+            Self::PortOverread(packet) => packet.key(),
             Self::NesLatchFilter(packet) => packet.key(),
             Self::NesClockFilter(packet) => packet.key(),
-            Self::NesOverread(packet) => packet.key(),
             Self::NesGameGenieCode(packet) => packet.key(),
+            Self::SnesLatchFilter(packet) => packet.key(),
             Self::SnesClockFilter(packet) => packet.key(),
-            Self::SnesOverread(packet) => packet.key(),
             Self::SnesGameGenieCode(packet) => packet.key(),
             Self::SnesLatchTrain(packet) => packet.key(),
             Self::GenesisGameGenieCode(packet) => packet.key(),
@@ -373,12 +375,12 @@ impl_from_packet!(
     MovieLicense
     MovieFile
     PortController
+    PortOverread
     NesLatchFilter
     NesClockFilter
-    NesOverread
     NesGameGenieCode
+    SnesLatchFilter
     SnesClockFilter
-    SnesOverread
     SnesGameGenieCode
     SnesLatchTrain
     GenesisGameGenieCode
@@ -418,12 +420,12 @@ pub enum PacketKind {
     MovieLicense,
     MovieFile,
     PortController,
+    PortOverread,
     NesLatchFilter,
     NesClockFilter,
-    NesOverread,
     NesGameGenieCode,
+    SnesLatchFilter,
     SnesClockFilter,
-    SnesOverread,
     SnesGameGenieCode,
     SnesLatchTrain,
     GenesisGameGenieCode,
@@ -1257,6 +1259,44 @@ impl Encode for PortController {
 }
 
 
+////////////////////////////////////// PORT_OVERREAD //////////////////////////////////////
+#[derive(Debug, Clone, PartialEq)]
+pub struct PortOverread {
+    pub port: u8,
+    pub overread: bool,
+}
+impl Decode for PortOverread {
+    fn decode(key: &[u8], mut payload: Reader) -> Result<Self, PacketError> {
+        if payload.remaining() != 2 {
+            return Err(PacketError::invalid(key, payload));
+        }
+        
+        Ok(Self {
+            port: payload.read_u8(),
+            overread: payload.read_bool(),
+        })
+    }
+    
+    fn kind(&self) -> PacketKind {
+        PacketKind::PortOverread
+    }
+}
+impl Encode for PortOverread {
+    fn encode(&self, keylen: u8) -> Vec<u8> {
+        let mut w = Writer::new();
+        
+        w.write_u8(self.port);
+        w.write_bool(self.overread);
+        
+        w.into_packet(&self.key(), keylen)
+    }
+
+    fn key(&self) -> Vec<u8> {
+        KEY_PORT_OVERREAD.to_vec()
+    }
+}
+
+
 ////////////////////////////////////// NES_LATCH_FILTER //////////////////////////////////////
 #[derive(Debug, Clone, PartialEq)]
 pub struct NesLatchFilter {
@@ -1327,41 +1367,6 @@ impl Encode for NesClockFilter {
 }
 
 
-////////////////////////////////////// NES_OVERREAD //////////////////////////////////////
-#[derive(Debug, Clone, PartialEq)]
-pub struct NesOverread {
-    pub overread: bool,
-}
-impl Decode for NesOverread {
-    fn decode(key: &[u8], mut payload: Reader) -> Result<Self, PacketError> {
-        if payload.remaining() != 1 {
-            return Err(PacketError::invalid(key, payload));
-        }
-        
-        Ok(Self {
-            overread: payload.read_bool(),
-        })
-    }
-    
-    fn kind(&self) -> PacketKind {
-        PacketKind::NesOverread
-    }
-}
-impl Encode for NesOverread {
-    fn encode(&self, keylen: u8) -> Vec<u8> {
-        let mut w = Writer::new();
-        
-        w.write_bool(self.overread);
-        
-        w.into_packet(&self.key(), keylen)
-    }
-
-    fn key(&self) -> Vec<u8> {
-        KEY_NES_OVERREAD.to_vec()
-    }
-}
-
-
 ////////////////////////////////////// NES_GAME_GENIE_CODE //////////////////////////////////////
 #[derive(Debug, Clone, PartialEq)]
 pub struct NesGameGenieCode {
@@ -1389,6 +1394,41 @@ impl Encode for NesGameGenieCode {
 
     fn key(&self) -> Vec<u8> {
         KEY_NES_GAME_GENIE_CODE.to_vec()
+    }
+}
+
+
+////////////////////////////////////// SNES_LATCH_FILTER //////////////////////////////////////
+#[derive(Debug, Clone, PartialEq)]
+pub struct SnesLatchFilter {
+    pub time: u16,
+}
+impl Decode for SnesLatchFilter {
+    fn decode(key: &[u8], mut payload: Reader) -> Result<Self, PacketError> {
+        if payload.remaining() != 2 {
+            return Err(PacketError::invalid(key, payload));
+        }
+        
+        Ok(Self {
+            time: payload.read_u16(),
+        })
+    }
+
+    fn kind(&self) -> PacketKind {
+        PacketKind::SnesLatchFilter
+    }
+}
+impl Encode for SnesLatchFilter {
+    fn encode(&self, keylen: u8) -> Vec<u8> {
+        let mut w = Writer::new();
+        
+        w.write_u16(self.time);
+        
+        w.into_packet(&self.key(), keylen)
+    }
+
+    fn key(&self) -> Vec<u8> {
+        KEY_SNES_LATCH_FILTER.to_vec()
     }
 }
 
@@ -1424,41 +1464,6 @@ impl Encode for SnesClockFilter {
 
     fn key(&self) -> Vec<u8> {
         KEY_SNES_CLOCK_FILTER.to_vec()
-    }
-}
-
-
-////////////////////////////////////// SNES_OVERREAD //////////////////////////////////////
-#[derive(Debug, Clone, PartialEq)]
-pub struct SnesOverread {
-    pub overread: bool,
-}
-impl Decode for SnesOverread {
-    fn decode(key: &[u8], mut payload: Reader) -> Result<Self, PacketError> {
-        if payload.remaining() != 1 {
-            return Err(PacketError::invalid(key, payload));
-        }
-        
-        Ok(Self {
-            overread: payload.read_bool(),
-        })
-    }
-    
-    fn kind(&self) -> PacketKind {
-        PacketKind::SnesOverread
-    }
-}
-impl Encode for SnesOverread {
-    fn encode(&self, keylen: u8) -> Vec<u8> {
-        let mut w = Writer::new();
-        
-        w.write_bool(self.overread);
-        
-        w.into_packet(&self.key(), keylen)
-    }
-
-    fn key(&self) -> Vec<u8> {
-        KEY_SNES_OVERREAD.to_vec()
     }
 }
 
@@ -1648,6 +1653,7 @@ impl Encode for InputMoment {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Transition {
     pub index_type: u8,
+    pub port: u8,
     pub index: u64,
     pub transition_type: u8,
     pub packet: Option<Box<Packet>>,
@@ -1658,6 +1664,7 @@ impl Decode for Transition {
             return Err(PacketError::invalid(key, payload));
         }
         let index_type = payload.read_u8();
+        let port = payload.read_u8();
         let index = payload.read_u64();
         let transition_type = payload.read_u8();
         let packet_data = payload.read_remaining();
@@ -1665,6 +1672,7 @@ impl Decode for Transition {
         
         Ok(Self {
             index_type,
+            port,
             index,
             transition_type,
             packet: if transition_type == 0xFF { Some(Box::new(Packet::with_reader(&mut packet_reader, key.len() as u8)?)) } else { None }
@@ -1680,6 +1688,7 @@ impl Encode for Transition {
         let mut w = Writer::new();
         
         w.write_u8(self.index_type);
+        w.write_u8(self.port);
         w.write_u64(self.index);
         w.write_u8(self.transition_type);
         if let Some(packet) = self.packet.as_ref() {

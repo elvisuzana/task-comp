@@ -1,4 +1,4 @@
-use std::cmp::max;
+use std::cmp::{max, min};
 use crate::util::to_bytes;
 
 pub struct Writer {
@@ -49,6 +49,14 @@ impl Writer {
     
     pub fn write_str(&mut self, data: &str) {
         self.inner.extend_from_slice(data.as_bytes());
+    }
+    
+    pub fn write_u8_str(&mut self, data: &str) {
+        let data = data.as_bytes();
+        let len = min(data.len(), 255);
+        
+        self.write_u8(len as u8);
+        self.inner.extend_from_slice(&data[..len]);
     }
     
     pub fn write_option_string(&mut self, data: &Option<String>) {
@@ -103,6 +111,7 @@ impl Writer {
 #[cfg(test)]
 mod tests {
     use std::array::from_fn;
+    use std::cmp::min;
     use crate::spec::writer::Writer;
     
     #[test]
@@ -167,10 +176,27 @@ mod tests {
             expected.push(data as u8);
         });
         
-        perform(["foo", "bar", "fish", "tasd", "hello world!", "lorem ipsum"], |w, expected, data| {
+        perform(["foo", "bar", "", "fish", "tasd", "hello world!", "lorem ipsum"], |w, expected, data| {
             w.write_str(data);
             expected.extend_from_slice(data.as_bytes());
         });
+        
+        perform(["foo", "bar", "", "fish", "tasd", "hello world!", "lorem ipsum"], |w, expected, data| {
+            w.write_u8_str(data);
+            expected.push(data.len() as u8);
+            expected.extend_from_slice(data.as_bytes());
+        });
+        for len in 0..280 {
+            let mut w = Writer::new();
+            let s = String::from_utf8(vec![0x5A; len]).unwrap();
+            w.write_u8_str(&s);
+            assert_eq!(w.inner.len(), 1 + min(len, 255));
+            
+            let mut expected = Vec::with_capacity(512);
+            expected.push(min(len, 255) as u8);
+            expected.extend_from_slice(&s.as_bytes()[..min(len, 255)]);
+            assert_eq!(w.inner, expected);
+        }
         
         let mut w = Writer::new();
         w.write_iter(0..=255);

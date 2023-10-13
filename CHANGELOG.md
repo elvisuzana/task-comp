@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [Unreleased]
+- Added method for writing a string prefixed with a u8 length byte
+
 ## [0.3.0] - 2023-09-28
 - Added unit and integration tests (in-progress)
 - Fixed bug where payload lengths larger than 255 bytes were decoded incorrectly

@@ -395,7 +395,7 @@ impl_from_packet!(
     Unsupported
 );
 
-#[derive(Debug, Copy, Clone, PartialEq, strum_macros::Display)]
+#[derive(Debug, Copy, Clone, PartialEq, strum_macros::Display, strum_macros::EnumString)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum PacketKind {
     ConsoleType,
@@ -488,9 +488,16 @@ impl Decode for ConsoleType {
         }
         let kind = payload.read_u8();
         
+        let custom = payload.read_remaining();
+        let custom = if custom.is_empty() {
+            None
+        } else {
+            Some(String::from_utf8_lossy(custom).to_string())
+        };
+        
         Ok(Self {
             kind,
-            custom: if kind == 0xFF { Some(String::from_utf8_lossy(payload.read_remaining()).to_string()) } else { None },
+            custom,
         })
     }
     
@@ -1093,8 +1100,7 @@ impl Encode for MemoryInit {
         w.write_u8(self.data_type);
         w.write_u16(self.device);
         w.write_bool(self.required);
-        w.write_u8(self.name.len() as u8);
-        w.write_str(&self.name[..min(self.name.len(), 256)]);
+        w.write_u8_str(&self.name);
         
         w.into_packet(&self.key(), keylen)
     }
@@ -1110,18 +1116,31 @@ impl Encode for MemoryInit {
 pub struct GameIdentifier {
     pub kind: u8,
     pub encoding: u8,
+    pub name: String,
     pub identifier: Vec<u8>,
 }
 impl Decode for GameIdentifier {
     fn decode(key: &[u8], mut payload: Reader) -> Result<Self, PacketError> {
-        if payload.remaining() < 2 {
+        if payload.remaining() < 3 {
             return Err(PacketError::invalid(key, payload));
         }
         
+        let kind = payload.read_u8();
+        let encoding = payload.read_u8();
+        
+        let nlen = payload.read_u8();
+        if payload.remaining() < nlen as usize {
+            return Err(PacketError::invalid(key, payload));
+        }
+        let name = payload.read_string(nlen as usize);
+        
+        let identifier = payload.read_remaining().to_vec();
+        
         Ok(Self {
-            kind: payload.read_u8(),
-            encoding: payload.read_u8(),
-            identifier: payload.read_remaining().to_vec(),
+            kind,
+            encoding,
+            name,
+            identifier,
         })
     }
 
@@ -1135,6 +1154,7 @@ impl Encode for GameIdentifier {
         
         w.write_u8(self.kind);
         w.write_u8(self.encoding);
+        w.write_u8_str(&self.name);
         w.write_slice(&self.identifier);
         
         w.into_packet(&self.key(), keylen)
@@ -1208,8 +1228,7 @@ impl Encode for MovieFile {
     fn encode(&self, keylen: u8) -> Vec<u8> {
         let mut w = Writer::new();
         
-        w.write_u8(self.name.len() as u8);
-        w.write_str(&self.name[..min(self.name.len(), 256)]);
+        w.write_u8_str(&self.name);
         w.write_slice(&self.data);
         
         w.into_packet(&self.key(), keylen)
